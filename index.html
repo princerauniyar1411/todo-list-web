@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo List</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --danger: #ef4444;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --success: #10b981;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #eef4ff, #f8fafc);
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+
+      .todo-app {
+        width: 100%;
+        max-width: 540px;
+        background: var(--card);
+        border-radius: 18px;
+        box-shadow: 0 18px 35px rgba(37, 99, 235, 0.12);
+        padding: 28px;
+      }
+
+      h1 {
+        margin: 0 0 20px;
+        text-align: center;
+        font-size: 2rem;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 1rem;
+        outline: none;
+      }
+
+      input[type="text"]:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      button {
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .add-btn {
+        background: var(--primary);
+        color: white;
+        padding: 12px 18px;
+        font-weight: bold;
+      }
+
+      .add-btn:hover {
+        background: var(--primary-dark);
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .task-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .task-text {
+        flex: 1;
+        word-break: break-word;
+      }
+
+      .completed .task-text {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--success);
+        cursor: pointer;
+      }
+
+      .delete-btn {
+        background: #fee2e2;
+        color: var(--danger);
+        padding: 8px 10px;
+        font-weight: bold;
+      }
+
+      .empty-state {
+        padding: 20px 10px;
+        text-align: center;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="todo-app">
+      <h1>Todo List</h1>
+
+      <div class="input-row">
+        <input id="taskInput" type="text" placeholder="Add a new task..." />
+        <button class="add-btn" id="addTaskBtn">Add</button>
+      </div>
+
+      <ul id="todoList"></ul>
+    </div>
+
+    <script>
+      const taskInput = document.getElementById('taskInput');
+      const addTaskBtn = document.getElementById('addTaskBtn');
+      const todoList = document.getElementById('todoList');
+
+      const STORAGE_KEY = 'todo-list-items';
+
+      let todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+      function saveTodos() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      }
+
+      function renderTodos() {
+        todoList.innerHTML = '';
+
+        if (todos.length === 0) {
+          const emptyMessage = document.createElement('li');
+          emptyMessage.className = 'empty-state';
+          emptyMessage.textContent = 'No tasks yet. Add one above!';
+          todoList.appendChild(emptyMessage);
+          return;
+        }
+
+        todos.forEach((todo) => {
+          const li = document.createElement('li');
+          if (todo.completed) {
+            li.classList.add('completed');
+          }
+
+          const taskMain = document.createElement('div');
+          taskMain.className = 'task-main';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = todo.completed;
+          checkbox.setAttribute('aria-label', `Mark ${todo.text} as complete`);
+          checkbox.addEventListener('change', () => {
+            todo.completed = checkbox.checked;
+            saveTodos();
+            renderTodos();
+          });
+
+          const text = document.createElement('span');
+          text.className = 'task-text';
+          text.textContent = todo.text;
+
+          taskMain.appendChild(checkbox);
+          taskMain.appendChild(text);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.addEventListener('click', () => {
+            todos = todos.filter((item) => item.id !== todo.id);
+            saveTodos();
+            renderTodos();
+          });
+
+          li.appendChild(taskMain);
+          li.appendChild(deleteBtn);
+          todoList.appendChild(li);
+        });
+      }
+
+      function addTodo() {
+        const text = taskInput.value.trim();
+        if (!text) {
+          taskInput.focus();
+          return;
+        }
+
+        todos.unshift({
+          id: Date.now(),
+          text,
+          completed: false
+        });
+
+        saveTodos();
+        renderTodos();
+        taskInput.value = '';
+        taskInput.focus();
+      }
+
+      addTaskBtn.addEventListener('click', addTodo);
+
+      taskInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          addTodo();
+        }
+      });
+
+      renderTodos();
+    </script>
+  </body>
+</html>

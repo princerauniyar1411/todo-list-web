@@ -70,7 +70,7 @@
         border: none;
         border-radius: 10px;
         cursor: pointer;
-        transition: transform 0.15s ease, opacity 0.15s ease;
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease;
       }
 
       button:hover {
@@ -82,6 +82,8 @@
         color: white;
         padding: 12px 18px;
         font-weight: bold;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+        animation: pulse 2s infinite ease-in-out;
       }
 
       .add-btn:hover {
@@ -101,6 +103,45 @@
         gap: 12px;
         padding: 12px 10px;
         border-bottom: 1px solid var(--border);
+      }
+
+      .todo-item {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+        animation: fadeInUp 0.35s ease forwards;
+      }
+
+      .todo-item.removing {
+        animation: fadeOut 0.25s ease forwards;
+      }
+
+      @keyframes fadeInUp {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
+          transform: translateX(18px) scale(0.96);
+          height: 0;
+          margin: 0;
+          padding-top: 0;
+          padding-bottom: 0;
+          border-bottom-width: 0;
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.03);
+        }
       }
 
       .task-main {
@@ -139,6 +180,7 @@
         padding: 20px 10px;
         text-align: center;
         color: var(--muted);
+        animation: fadeInUp 0.3s ease;
       }
     </style>
   </head>
@@ -180,6 +222,8 @@
 
         todos.forEach((todo) => {
           const li = document.createElement('li');
+          li.classList.add('todo-item');
+
           if (todo.completed) {
             li.classList.add('completed');
           }
@@ -208,9 +252,12 @@
           deleteBtn.className = 'delete-btn';
           deleteBtn.textContent = 'Delete';
           deleteBtn.addEventListener('click', () => {
-            todos = todos.filter((item) => item.id !== todo.id);
-            saveTodos();
-            renderTodos();
+            li.classList.add('removing');
+            setTimeout(() => {
+              todos = todos.filter((item) => item.id !== todo.id);
+              saveTodos();
+              renderTodos();
+            }, 220);
           });
 
           li.appendChild(taskMain);
